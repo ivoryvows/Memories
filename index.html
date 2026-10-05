@@ -186,6 +186,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
+            cursor: pointer;
         }
         .card-content {
             padding: 20px;
@@ -218,6 +219,8 @@
             font-size: 12px;
             color: #888;
             margin-top: auto;
+            flex-wrap: wrap;
+            gap: 5px;
         }
         .download-btn {
             background: none;
@@ -228,9 +231,24 @@
             cursor: pointer;
             font-size: 11px;
             text-decoration: none;
+            display: inline-block;
         }
         .download-btn:hover {
             background: var(--gold-primary);
+            color: white;
+        }
+        .delete-btn {
+            background: #ffebee;
+            border: 1px solid #d32f2f;
+            color: #d32f2f;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
             color: white;
         }
         .no-data {
@@ -326,7 +344,7 @@
     </div>
 
     <script>
-        // Firebase Configuration (Safely structured)
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: ["AIzaSyAdlmEH", "OHwsnQFcwfUpCNk", "HVCNzYlnoUqw"].join(''),
             authDomain: "promesse-eternele-memories.firebaseapp.com",
@@ -386,12 +404,12 @@
                 }
             } else {
                 mediaRecorder.stop();
-                btn.innerText = "🎙️ Record Again";
+                btn.innerText = "🎙️️ Record Again";
                 btn.classList.remove("recording");
             }
         }
 
-        // Smart client-side image compression to ensure smooth, error-free uploads directly to database
+        // Smart client-side image compression
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -423,7 +441,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Compressing with optimized quality for fast, reliable saving
                         resolve(canvas.toDataURL('image/jpeg', 0.65));
                     }
                 }
@@ -490,6 +507,31 @@
             }
         });
 
+        // Open Full Photo in New Window/Tab safely using Data URL
+        function openFullPhoto(base64Data) {
+            const win = window.open();
+            win.document.write(`
+                <html>
+                    <head><title>Full Size Photo</title></head>
+                    <body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh;">
+                        <img src="${base64Data}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                    </body>
+                </html>
+            `);
+        }
+
+        // Delete Memory Function
+        async function deleteMemory(docId) {
+            if (confirm("Kya aap sach mein is memory ko delete karna chahti hain?")) {
+                try {
+                    await db.collection("memories").doc(docId).delete();
+                } catch (error) {
+                    console.error("Error deleting memory: ", error);
+                    alert("Delete karne mein kuch error aaya!");
+                }
+            }
+        }
+
         // Real-Time Live Dashboard Sync from Firestore
         function loadLiveDashboard() {
             const grid = document.getElementById('dashboardGrid');
@@ -506,11 +548,13 @@
                 grid.innerHTML = "";
                 snapshot.forEach(doc => {
                     const item = doc.data();
+                    const docId = doc.id;
                     const dateStr = item.createdAt ? item.createdAt.toDate().toLocaleString() : "Just now";
 
                     let imgHtml = "";
                     if(item.images && item.images.length > 0) {
-                        imgHtml = `<img src="${item.images[0]}" alt="Memory Photo">`;
+                        // Pass image data securely to custom openFullPhoto function
+                        imgHtml = `<img src="${item.images[0]}" alt="Memory Photo" onclick="openFullPhoto('${item.images[0]}')">`;
                     }
 
                     let audioHtml = item.audio ? `<audio controls class="audio-player" src="${item.audio}"></audio>` : ``;
@@ -525,7 +569,10 @@
                             ${audioHtml}
                             <div class="card-footer">
                                 <span>${dateStr}</span>
-                                ${item.images && item.images[0] ? `<a href="${item.images[0]}" target="_blank" class="download-btn">View Full Photo</a>` : ''}
+                                <div>
+                                    ${item.images && item.images[0] ? `<button onclick="openFullPhoto('${item.images[0]}')" class="download-btn">View Full Photo</button>` : ''}
+                                    <button onclick="deleteMemory('${docId}')" class="delete-btn">🗑️ Delete</button>
+                                </div>
                             </div>
                         </div>
                     `;
