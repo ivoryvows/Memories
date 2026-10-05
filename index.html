@@ -364,10 +364,11 @@
             db.collection("memories").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
                 stats.innerHTML = `Total memories received: <b>${snapshot.size}</b>`;
 
-                if (snapshot.empty) {
-                    grid.innerHTML = `<div class="no-data">💌 Abhi tak koi memory nahi aayi hai. Jaise hi guests QR code se upload karenge, wo yahan live dikhne lagegi! ✨</div>`;
+                                if (snapshot.empty) {
+                    grid.innerHTML = `<div class="no-data">💌 No memories received yet. As soon as guests upload via the QR code, they will appear here live! ✨</div>`;
                     return;
                 }
+
 
                 grid.innerHTML = "";
                 snapshot.forEach(doc => {
