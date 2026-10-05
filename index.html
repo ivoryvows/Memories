@@ -270,7 +270,7 @@
             <button class="qr-toggle-btn" onclick="toggleQRSection()">📱 Show Guest QR Code</button>
         </div>
 
-        <!-- Collapsible QR Code Box for Quick Reference -->
+        <!-- Collapsible QR Code Box -->
         <div id="qrSection" class="qr-card-section">
             <h3>Guest QR Code</h3>
             <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Scan this or share the link with guests for uploads.</p>
@@ -297,7 +297,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Toggle QR Code Box visibility & generate QR dynamically
+        // Toggle QR Code Box visibility & generate QR dynamically using your exact live guest link
         let qrGenerated = false;
         function toggleQRSection() {
             const section = document.getElementById('qrSection');
@@ -316,9 +316,8 @@
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = "";
             
-            // NOTE: Yahan aap apni Guest website ka live link (GitHub Pages URL) dal sakti hain jab wo deploy ho jaye
-            // Abhi ke liye yeh current domain ka base link utha raha hai
-            const guestUrl = window.location.href.replace('admin.html', 'index.html');
+            // Your exact deployed guest page link
+            const guestUrl = "https://ivoryvows.github.io/Guest-memories-/";
             document.getElementById('guestUrlText').innerText = guestUrl;
             
             new QRCode(qrContainer, {
@@ -364,11 +363,10 @@
             db.collection("memories").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
                 stats.innerHTML = `Total memories received: <b>${snapshot.size}</b>`;
 
-                                if (snapshot.empty) {
+                if (snapshot.empty) {
                     grid.innerHTML = `<div class="no-data">💌 No memories received yet. As soon as guests upload via the QR code, they will appear here live! ✨</div>`;
                     return;
                 }
-
 
                 grid.innerHTML = "";
                 snapshot.forEach(doc => {
@@ -378,6 +376,13 @@
 
                     let photosHtml = "";
                     if (item.images && item.images.length > 0) {
+                        photosHtml = `<div class="photo-gallery">`;
+                        item.images.forEach(imgBase64 => {
+                            photosHtml += `<img src="${imgBase64}" alt="Memory Photo" onclick="openFullPlatform('${imgBase64}')">`;
+                            // Quick fix for onclick function name matching
+                        });
+                        photosHtml += `</div>`;
+                        // Replacing standard click call to use openFullPhoto properly
                         photosHtml = `<div class="photo-gallery">`;
                         item.images.forEach(imgBase64 => {
                             photosHtml += `<img src="${imgBase64}" alt="Memory Photo" onclick="openFullPhoto('${imgBase64}')">`;
