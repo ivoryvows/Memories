@@ -158,7 +158,7 @@
             100% { opacity: 1; }
         }
 
-        /* Dashboard */
+        /* Dashboard & Multi-image Gallery */
         .dashboard-header {
             display: flex;
             justify-content: space-between;
@@ -170,7 +170,7 @@
         }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
         }
         .card {
@@ -182,11 +182,26 @@
             display: flex;
             flex-direction: column;
         }
-        .card img {
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 5px;
+            padding: 10px;
+            background: #fffcf5;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .photo-gallery img {
             width: 100%;
-            height: 200px;
+            height: 85px;
             object-fit: cover;
+            border-radius: 6px;
             cursor: pointer;
+            border: 1px solid #e6d5b8;
+            transition: transform 0.2s;
+        }
+        .photo-gallery img:hover {
+            transform: scale(1.03);
         }
         .card-content {
             padding: 20px;
@@ -311,7 +326,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Select Pictures from Gallery</label>
+                    <label>Select Pictures from Gallery (Multiple allowed)</label>
                     <input type="file" id="guestImages" accept="image/*" multiple>
                 </div>
                 
@@ -404,7 +419,7 @@
                 }
             } else {
                 mediaRecorder.stop();
-                btn.innerText = "🎙️️ Record Again";
+                btn.innerText = "🎙 Record Again";
                 btn.classList.remove("recording");
             }
         }
@@ -551,10 +566,13 @@
                     const docId = doc.id;
                     const dateStr = item.createdAt ? item.createdAt.toDate().toLocaleString() : "Just now";
 
-                    let imgHtml = "";
-                    if(item.images && item.images.length > 0) {
-                        // Pass image data securely to custom openFullPhoto function
-                        imgHtml = `<img src="${item.images[0]}" alt="Memory Photo" onclick="openFullPhoto('${item.images[0]}')">`;
+                    let photosHtml = "";
+                    if (item.images && item.images.length > 0) {
+                        photosHtml = `<div class="photo-gallery">`;
+                        item.images.forEach(imgBase64 => {
+                            photosHtml += `<img src="${imgBase64}" alt="Memory" onclick="openFullPhoto('${imgBase64}')">`;
+                        });
+                        photosHtml += `</div>`;
                     }
 
                     let audioHtml = item.audio ? `<audio controls class="audio-player" src="${item.audio}"></audio>` : ``;
@@ -562,7 +580,7 @@
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        ${imgHtml}
+                        ${photosHtml}
                         <div class="card-content">
                             <div class="card-title">${escapeHtml(item.name)}</div>
                             <div class="card-text">${item.message ? '"' + escapeHtml(item.message) + '"' : ''}</div>
@@ -570,7 +588,6 @@
                             <div class="card-footer">
                                 <span>${dateStr}</span>
                                 <div>
-                                    ${item.images && item.images[0] ? `<button onclick="openFullPhoto('${item.images[0]}')" class="download-btn">View Full Photo</button>` : ''}
                                     <button onclick="deleteMemory('${docId}')" class="delete-btn">🗑️ Delete</button>
                                 </div>
                             </div>
